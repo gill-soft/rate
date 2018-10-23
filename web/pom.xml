@@ -2,8 +2,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.gillsoft</groupId>
-	<artifactId>gds-rate-web</artifactId>
+	<groupId>com.gillsoft.rate</groupId>
+	<artifactId>web</artifactId>
 	<version>0.0.1</version>
 	<packaging>war</packaging>
 
@@ -39,7 +39,21 @@
 		</pluginManagement>
 	</build>
 
+	<repositories>
+		<repository>
+			<id>rate-repository</id>
+			<name>Rate service repository</name>
+			<url>https://github.com/gill-soft/rate/raw/repository</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
+		<dependency>
+			<groupId>com.gillsoft.rate</groupId>
+			<artifactId>commons</artifactId>
+			<version>0.0.1</version>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
@@ -118,13 +132,6 @@
             <version>8.0.12</version>
         </dependency>
 
-		<dependency>
-			<groupId>com.gillsoft</groupId>
-			<artifactId>gds-rate-commons</artifactId>
-			<scope>system</scope>
-			<version>0.0.1</version>
-			<systemPath>C:\git\rate\commons\target\rate-commons.jar</systemPath>
-		</dependency>
 	</dependencies>
 
 </project>

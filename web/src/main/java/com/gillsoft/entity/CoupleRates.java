@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -22,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @NamedQuery(name="CoupleRates.findAll", query="SELECT s FROM CoupleRates s")
 @JsonInclude(value = Include.NON_NULL)
 @IdClass(CoupleRatesId.class)
-@Access(AccessType.PROPERTY)
 public class CoupleRates implements Serializable {
 
 	private static final long serialVersionUID = -4974653223542590795L;
@@ -32,13 +29,16 @@ public class CoupleRates implements Serializable {
 	@JsonProperty("couple_id")
 	private Integer coupleId;
 
+	@Id
 	@Column(name="rate", nullable=false)
 	private BigDecimal rate;
 
+	@Id
 	@Column(name="date_start", nullable=false)
 	@JsonProperty("date_start")
 	private Date dateStart;
 
+	@Id
 	@Column(name="date_end", nullable=true)
 	@JsonProperty("date_end")
 	private Date dateEnd;

@@ -29,14 +29,13 @@
       </plugin>
     </plugins>
   </build>
-  <dependencies>
-    <dependency>
-      <groupId>com.gillsoft</groupId>
-      <artifactId>gds-rate-commons</artifactId>
-      <scope>system</scope>
-      <systemPath>C:\git\gds-rate\commons\target\gds-rate-commons-0.0.1.jar</systemPath>
-    </dependency>
-  </dependencies>
+  <repositories>
+    <repository>
+      <id>rate-repository</id>
+      <name>Rate service repository</name>
+      <url>https://github.com/gill-soft/rate/raw/repository</url>
+    </repository>
+  </repositories>
   <dependencyManagement>
     <dependencies>
       <dependency>

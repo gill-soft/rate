@@ -12,12 +12,20 @@
 		<log4j.version>2.11.0</log4j.version>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>rate-repository</id>
+			<name>Rate service repository</name>
+			<url>https://github.com/gill-soft/rate/raw/repository</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
-			<groupId>com.gillsoft</groupId>
-			<artifactId>gds-rate-commons</artifactId>
-			<scope>system</scope>
-			<systemPath>C:\git\gds-rate\gds-rate-commons\target\gds-rate-commons-0.0.1.jar</systemPath>
+			<groupId>com.gillsoft.rate</groupId>
+			<artifactId>commons</artifactId>
+			<version>0.0.1</version>
+			<scope>compile</scope>
 		</dependency>
 
 		<dependency>

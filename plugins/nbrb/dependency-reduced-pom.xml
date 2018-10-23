@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.gillsoft.rate</groupId>
-  <artifactId>gds-rate-nbrb</artifactId>
+  <artifactId>nbrb</artifactId>
   <version>0.0.1</version>
   <build>
-    <finalName>gds-rate-nbrb</finalName>
+    <finalName>rate-system-nbrb</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -29,14 +29,13 @@
       </plugin>
     </plugins>
   </build>
-  <dependencies>
-    <dependency>
-      <groupId>com.gillsoft</groupId>
-      <artifactId>gds-rate-commons</artifactId>
-      <scope>system</scope>
-      <systemPath>C:\git\gds-rate\gds-rate-commons\target\gds-rate-commons-0.0.1.jar</systemPath>
-    </dependency>
-  </dependencies>
+  <repositories>
+    <repository>
+      <id>rate-repository</id>
+      <name>Rate service repository</name>
+      <url>https://github.com/gill-soft/rate/raw/repository</url>
+    </repository>
+  </repositories>
   <dependencyManagement>
     <dependencies>
       <dependency>

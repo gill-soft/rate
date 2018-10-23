@@ -6,5 +6,6 @@
 		<class>com.gillsoft.entity.Systems</class>
 		<class>com.gillsoft.entity.SystemCouples</class>
 		<class>com.gillsoft.entity.Couples</class>
+		<class>com.gillsoft.entity.CoupleRates</class>
 	</persistence-unit>
 </persistence>
