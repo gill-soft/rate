@@ -27,7 +27,7 @@ public class CoupleRates implements Serializable {
 	@Id
 	@Column(name="couple_id", nullable=false)
 	@JsonProperty("couple_id")
-	private Integer coupleId;
+	private Long coupleId;
 
 	@Id
 	@Column(name="rate", nullable=false)
@@ -46,11 +46,11 @@ public class CoupleRates implements Serializable {
 	public CoupleRates() {
 	}
 
-	public Integer getCoupleId() {
+	public Long getCoupleId() {
 		return coupleId;
 	}
 
-	public void setCoupleId(Integer coupleId) {
+	public void setCoupleId(Long coupleId) {
 		this.coupleId = coupleId;
 	}
 

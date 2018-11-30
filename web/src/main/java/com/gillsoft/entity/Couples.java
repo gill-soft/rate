@@ -27,7 +27,7 @@ public class Couples implements Serializable {
 	@Column(name="id", unique=true, nullable=false)
 	@GeneratedValue
 	@JsonProperty("id")
-	private Integer id;
+	private Long id;
 
 	@Column(name="organization_id", nullable=false)
 	@JsonProperty("organization_id")
@@ -44,11 +44,11 @@ public class Couples implements Serializable {
 	public Couples() {
 	}
 
-	public Integer getId() {
+	public Long getId() {
 		return this.id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 

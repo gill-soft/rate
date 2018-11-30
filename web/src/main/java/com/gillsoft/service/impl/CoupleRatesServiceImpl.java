@@ -47,19 +47,20 @@ public class CoupleRatesServiceImpl implements CoupleRatesService {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<CoupleRates> getRateCouple(String currencyFrom, String currencyTo, Date date) {
+	public List<CoupleRates> getRateCouple(Long coupleId, Date date) {
 		List<CoupleRates> coupleRates = null;
 		EntityManager em = entityManagerFactory.getObject().createEntityManager();
 		coupleRates = em
 				.createQuery(
-						"SELECT cr FROM CoupleRates cr WHERE cr.coupleId IN (SELECT c FROM Couples c WHERE c.currencyFrom = :currencyFrom AND c.currencyTo = :currencyTo) AND (:date >= cr.dateStart and (:date <= cr.dateEnd or cr.dateEnd is null))")
-				.setParameter("currencyFrom", currencyFrom).setParameter("currencyTo", currencyTo)
-				.setParameter("date", date).getResultList();
+						"SELECT cr FROM CoupleRates cr WHERE cr.coupleId = :p_couple_id AND (:date >= cr.dateStart and (:date <= cr.dateEnd or cr.dateEnd is null))")
+				.setParameter("p_couple_id", coupleId)
+				.setParameter("date", date)
+				.getResultList();
 		em.close();
 		return coupleRates;
 	}
 
-	public void setRate(Integer coupleId, BigDecimal rate, Date dateStart) throws Exception {
+	public void setRate(Long coupleId, BigDecimal rate, Date dateStart) throws Exception {
 		EntityManager em = entityManagerFactory.getObject().createEntityManager();
 		try {
 		em.createStoredProcedureQuery("rate.mod_rate")

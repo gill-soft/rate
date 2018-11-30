@@ -8,7 +8,7 @@ public class SystemCouplesId implements Serializable {
 
 	private Integer systemId;
 
-	private Integer coupleId;
+	private Long coupleId;
 
 	public SystemCouplesId() {
 	}
@@ -21,11 +21,11 @@ public class SystemCouplesId implements Serializable {
 		this.systemId = systemId;
 	}
 
-	public Integer getCoupleId() {
+	public Long getCoupleId() {
 		return coupleId;
 	}
 
-	public void setCoupleId(Integer coupleId) {
+	public void setCoupleId(Long coupleId) {
 		this.coupleId = coupleId;
 	}
 

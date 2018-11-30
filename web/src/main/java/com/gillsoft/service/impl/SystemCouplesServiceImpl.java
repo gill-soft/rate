@@ -71,7 +71,7 @@ public class SystemCouplesServiceImpl implements SystemCouplesService {
 		return couplesMap;
 	}
 
-	public void deleteSystemCouple(String organizationId, Integer coupleId) {
+	public void deleteSystemCouple(String organizationId, Long coupleId) {
 		Map<Integer, List<Couples>> systemCouples = getAllSystemCouples(organizationId);
 		if (systemCouples != null && !systemCouples.isEmpty()) {
 			systemCouples.entrySet().stream().forEach(es -> {

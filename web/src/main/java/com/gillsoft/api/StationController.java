@@ -112,7 +112,7 @@ public class StationController {
 	@DeleteMapping("/{organization_id}/system/{couple_id}")
 	@ApiOperation("Delete organization's rate system")
 	public ResponseEntity<Map<Integer, List<Couples>>> deleteSystemCouple(
-			@PathVariable("organization_id") String organizationId, @PathVariable("couple_id") Integer coupleId) {
+			@PathVariable("organization_id") String organizationId, @PathVariable("couple_id") Long coupleId) {
 		systemCouplesService.deleteSystemCouple(organizationId, coupleId);
 		return new ResponseEntity<Map<Integer, List<Couples>>>(systemCouplesService.getAllSystemCouples(organizationId),
 				HttpStatus.OK);
@@ -144,18 +144,16 @@ public class StationController {
 		}
 	}
 
-	@GetMapping("/rate/{currency_from}/{currency_to}")
-	@ApiOperation("Get rate for currency_from/currency_to pair")
-	public ResponseEntity<List<CoupleRates>> getRate(@PathVariable("currency_from") String currencyFrom,
-			@PathVariable("currency_to") String currencyTo) {
+	@GetMapping("/rate/{couple_id}")
+	@ApiOperation("Get rate for couple_id (currency_from/currency_to pair)")
+	public ResponseEntity<List<CoupleRates>> getRate(@PathVariable("couple_id") Long coupleId) {
 		return new ResponseEntity<List<CoupleRates>>(
-				coupleRatesService.getRateCouple(currencyFrom, currencyTo, new Date()), HttpStatus.OK);
+				coupleRatesService.getRateCouple(coupleId, new Date()), HttpStatus.OK);
 	}
 
-	@GetMapping("/rate/{currency_from}/{currency_to}/{date}")
-	@ApiOperation("Get rate for currency_from/currency_to pair for date")
-	public ResponseEntity<?> getRateForDate(@PathVariable("currency_from") String currencyFrom,
-			@PathVariable("currency_to") String currencyTo,
+	@GetMapping("/rate/{couple_id}/{date}")
+	@ApiOperation("Get rate for couple_id (currency_from/currency_to pair) for date")
+	public ResponseEntity<?> getRateForDate(@PathVariable("couple_id") Long coupleId,
 			@PathVariable("date") String date) {
 		if (date == null || !date.replaceAll("\\d{4}-\\d{2}-\\d{2}", "").isEmpty()) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new RequestError("Bad date format [yyyy-MM-dd]"));
@@ -168,7 +166,7 @@ public class StationController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bad date format [yyyy-MM-dd]");
 		}
 		return new ResponseEntity<List<CoupleRates>>(
-				coupleRatesService.getRateCouple(currencyFrom, currencyTo, rateDate), HttpStatus.OK);
+				coupleRatesService.getRateCouple(coupleId, rateDate), HttpStatus.OK);
 	}
 
 	@PostMapping("/rate")
