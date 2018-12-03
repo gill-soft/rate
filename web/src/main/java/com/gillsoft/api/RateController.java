@@ -44,7 +44,7 @@ import io.swagger.annotations.ApiOperation;
 @RequestMapping(path="/api", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 @Configuration
 @EnableScheduling
-public class StationController {
+public class RateController {
 
 	@Autowired
     private SystemsServiceImpl systemsService;
@@ -66,22 +66,22 @@ public class StationController {
 			RateLoaderService rateLoaderService = RateLoaderService.getInstance();
 			loaders = rateLoaderService.getLoaders();
 		} catch (Exception e) {
-			return new ResponseEntity<List<String>>(Arrays.asList(new String[] { e.getMessage() }), HttpStatus.FORBIDDEN);
+			return new ResponseEntity<>(Arrays.asList(e.getMessage()), HttpStatus.FORBIDDEN);
 		}
-		return new ResponseEntity<List<String>>(loaders == null ? new ArrayList<>() : loaders, HttpStatus.OK);
+		return new ResponseEntity<>(loaders == null ? new ArrayList<>() : loaders, HttpStatus.OK);
 	}
 
 	@GetMapping("/systems")
 	@ApiOperation("Get rate systems")
 	public ResponseEntity<List<Systems>> getAll() {
 		updateRateSchedule();
-		return new ResponseEntity<List<Systems>>(systemsService.getAll(), HttpStatus.OK);
+		return new ResponseEntity<>(systemsService.getAll(), HttpStatus.OK);
 	}
 
 	@PostMapping("/systems/add")
 	@ApiOperation("Add new rate system")
 	public ResponseEntity<Systems> addSystem(@RequestBody Systems system) {
-		return new ResponseEntity<Systems>(systemsService.save(system), HttpStatus.OK);
+		return new ResponseEntity<>(systemsService.save(system), HttpStatus.OK);
 	}
 
 	@DeleteMapping("/systems/{system_id}")
@@ -90,23 +90,23 @@ public class StationController {
 		Systems system = systemsService.findOne(systemId);
 		if (system != null) {
 			systemsService.delete(system);
-			return new ResponseEntity<String>("", HttpStatus.OK);
+			return new ResponseEntity<>("", HttpStatus.OK);
 		}
-		return new ResponseEntity<String>("", HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>("", HttpStatus.NOT_FOUND);
 	}
 
 	@GetMapping("/{organization_id}/systems")
 	@ApiOperation("Get all rate system couples")
 	public ResponseEntity<Map<Integer, List<Couples>>> getSystemCouples(
 			@PathVariable("organization_id") String organizationId) {
-		return new ResponseEntity<Map<Integer, List<Couples>>>(systemCouplesService.getAllSystemCouples(organizationId),
+		return new ResponseEntity<>(systemCouplesService.getAllSystemCouples(organizationId),
 				HttpStatus.OK);
 	}
 
 	@PostMapping("/systems/couples/add")
 	@ApiOperation("Add rate system couple")
 	public ResponseEntity<SystemCouples> addSystemCouples(@RequestBody SystemCouples systemCouples) {
-		return new ResponseEntity<SystemCouples>(systemCouplesService.save(systemCouples), HttpStatus.OK);
+		return new ResponseEntity<>(systemCouplesService.save(systemCouples), HttpStatus.OK);
 	}
 
 	@DeleteMapping("/{organization_id}/system/{couple_id}")
@@ -114,7 +114,7 @@ public class StationController {
 	public ResponseEntity<Map<Integer, List<Couples>>> deleteSystemCouple(
 			@PathVariable("organization_id") String organizationId, @PathVariable("couple_id") Long coupleId) {
 		systemCouplesService.deleteSystemCouple(organizationId, coupleId);
-		return new ResponseEntity<Map<Integer, List<Couples>>>(systemCouplesService.getAllSystemCouples(organizationId),
+		return new ResponseEntity<>(systemCouplesService.getAllSystemCouples(organizationId),
 				HttpStatus.OK);
 	}
 
@@ -122,7 +122,7 @@ public class StationController {
 	@ApiOperation("Get all rate couples")
 	public ResponseEntity<List<Couples>> getOrganizationCouples(
 			@PathVariable("organization_id") String organizationId) {
-		return new ResponseEntity<List<Couples>>(couplesService.getOrganizationCouples(organizationId),
+		return new ResponseEntity<>(couplesService.getOrganizationCouples(organizationId),
 				HttpStatus.OK);
 	}
 
@@ -132,14 +132,14 @@ public class StationController {
 		if (couples.getCurrencyFrom() == null || couples.getCurrencyTo() == null
 				|| !couples.getCurrencyFrom().replaceAll("[A-Z]{3}", "").isEmpty()
 				|| !couples.getCurrencyTo().replaceAll("[A-Z]{3}", "").isEmpty()) {
-			return new ResponseEntity<RequestError>(
+			return new ResponseEntity<>(
 					new RequestError("Currency code error (ISO 4217) [USD, EUR, UAH...]"), HttpStatus.BAD_REQUEST);
 		}
 		if (couplesService.save(couples) != null) {
-			return new ResponseEntity<Map<Integer, List<Couples>>>(
+			return new ResponseEntity<>(
 					systemCouplesService.getAllSystemCouples(couples.getOrganizationId()), HttpStatus.OK);
 		} else {
-			return new ResponseEntity<RequestError>(new RequestError("New rate couple create error"),
+			return new ResponseEntity<>(new RequestError("New rate couple create error"),
 					HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -147,8 +147,15 @@ public class StationController {
 	@GetMapping("/rate/{couple_id}")
 	@ApiOperation("Get rate for couple_id (currency_from/currency_to pair)")
 	public ResponseEntity<List<CoupleRates>> getRate(@PathVariable("couple_id") Long coupleId) {
-		return new ResponseEntity<List<CoupleRates>>(
+		return new ResponseEntity<>(
 				coupleRatesService.getRateCouple(coupleId, new Date()), HttpStatus.OK);
+	}
+
+	@GetMapping("/rates/{organization_id}")
+	@ApiOperation("Get rate for couple_id (currency_from/currency_to pair)")
+	public ResponseEntity<Object> getOrganizationRates(@PathVariable("organization_id") String organizationId) {
+		return new ResponseEntity<>(
+				coupleRatesService.getAllCouplesRatesByOrganization(organizationId), HttpStatus.OK);
 	}
 
 	@GetMapping("/rate/{couple_id}/{date}")
@@ -165,7 +172,7 @@ public class StationController {
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bad date format [yyyy-MM-dd]");
 		}
-		return new ResponseEntity<List<CoupleRates>>(
+		return new ResponseEntity<>(
 				coupleRatesService.getRateCouple(coupleId, rateDate), HttpStatus.OK);
 	}
 
@@ -176,7 +183,7 @@ public class StationController {
 			coupleRatesService.setRate(coupleRates.getCoupleId(), coupleRates.getRate(), coupleRates.getDateStart());
 			return ResponseEntity.status(HttpStatus.OK).build();
 		} catch (Exception e) {
-			return new ResponseEntity<RequestError>(new RequestError(e.getMessage()), HttpStatus.OK);
+			return new ResponseEntity<>(new RequestError(e.getMessage()), HttpStatus.OK);
 		}
 	}
 
@@ -243,10 +250,5 @@ public class StationController {
 		}
 		return startDate.getTime();
 	}
-
-	/*@Scheduled(cron = "0 48,49 * * * ?")
-	public void testSchedule() {
-		System.out.println("testSchedule()" + new java.util.Date().toString());
-	}*/
 
 }
