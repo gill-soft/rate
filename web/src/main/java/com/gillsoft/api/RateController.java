@@ -152,7 +152,7 @@ public class RateController {
 	}
 
 	@GetMapping("/rates/{organization_id}")
-	@ApiOperation("Get rate for couple_id (currency_from/currency_to pair)")
+	@ApiOperation("Get organization rates for current date")
 	public ResponseEntity<Object> getOrganizationRates(@PathVariable("organization_id") String organizationId) {
 		return new ResponseEntity<>(
 				coupleRatesService.getAllCouplesRatesByOrganization(organizationId), HttpStatus.OK);

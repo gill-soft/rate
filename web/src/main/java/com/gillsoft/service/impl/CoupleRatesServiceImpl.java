@@ -1,8 +1,11 @@
 package com.gillsoft.service.impl;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.ParameterMode;
@@ -74,22 +77,31 @@ public class CoupleRatesServiceImpl implements CoupleRatesService {
 		return coupleRates;
 	}
 	
-	public Object getAllCouplesRatesByOrganization(String organizationId) {
+	public Map<String, List<Object>> getAllCouplesRatesByOrganization(String organizationId) {
 		EntityManager em = entityManagerFactory.getObject().createEntityManager();
-		Object array = null;
+		Object[] array = null;
+		Map<String, List<Object>> map = new HashMap<>();
 		try {
 			array = em
 					.createQuery(
 							"SELECT c, cr FROM Couples c, CoupleRates cr WHERE c.organizationId = :p_organization_id AND cr.coupleId = c.id AND (:p_date >= cr.dateStart and (:p_date <= cr.dateEnd or cr.dateEnd is null))")
 					.setParameter("p_organization_id", organizationId)
 					.setParameter("p_date", new Date())
-					.getResultList();
+					.getResultList().toArray();
+			if (array.length != 0) {
+				map.put("couples", new ArrayList<>());
+				map.put("rates", new ArrayList<>());
+				for (int i = 0; i < array.length; i++) {
+					map.get("couples").add(((Object[])array[i])[0]);
+					map.get("rates").add(((Object[])array[i])[1]);
+				}
+			}
 		} catch (Exception e) {
 			LOGGER.error(e);
 		} finally {
 			em.close();
 		}
-		return array;
+		return map;
 	}
 
 	public void setRate(Long coupleId, BigDecimal rate, Date dateStart) throws Exception {
