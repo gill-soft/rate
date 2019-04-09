@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gillsoft.rate</groupId>
-	<artifactId>commons</artifactId>
+	<artifactId>gds-rate-commons</artifactId>
 	<version>0.0.1</version>
 
 	<properties>
@@ -19,7 +19,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>rate-commons</finalName>
+		<finalName>gds-rate-commons</finalName>
 		<pluginManagement>
 			<plugins>
 				<plugin>
