@@ -2,15 +2,21 @@ package com.gillsoft.entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.NamedQuery;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,7 +33,7 @@ public class CoupleRates implements Serializable {
 	@Id
 	@Column(name="couple_id", nullable=false)
 	@JsonProperty("couple_id")
-	private Long coupleId;
+	private Integer coupleId;
 
 	@Id
 	@Column(name="rate", nullable=false)
@@ -36,21 +42,23 @@ public class CoupleRates implements Serializable {
 	@Id
 	@Column(name="date_start", nullable=false)
 	@JsonProperty("date_start")
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date dateStart;
 
 	@Id
 	@Column(name="date_end", nullable=true)
 	@JsonProperty("date_end")
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date dateEnd;
 
 	public CoupleRates() {
 	}
 
-	public Long getCoupleId() {
+	public Integer getCoupleId() {
 		return coupleId;
 	}
 
-	public void setCoupleId(Long coupleId) {
+	public void setCoupleId(Integer coupleId) {
 		this.coupleId = coupleId;
 	}
 
@@ -78,4 +86,12 @@ public class CoupleRates implements Serializable {
 		this.dateEnd = dateEnd;
 	}
 
+	@PrePersist
+	@PreUpdate
+    public void prePersistUpdate() {
+		if (dateEnd == null) {
+			dateEnd = new GregorianCalendar(2099, Calendar.DECEMBER, 31, 23, 59, 59).getTime();
+		}
+    }
+ 
 }

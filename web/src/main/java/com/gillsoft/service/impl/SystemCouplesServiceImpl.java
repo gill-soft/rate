@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import com.gillsoft.entity.Couples;
 import com.gillsoft.entity.SystemCouples;
+import com.gillsoft.repository.CouplesRepository;
 import com.gillsoft.repository.SystemCouplesRepository;
 import com.gillsoft.service.SystemCouplesService;
 
@@ -27,6 +28,9 @@ public class SystemCouplesServiceImpl implements SystemCouplesService {
 
     @Autowired
     private SystemCouplesRepository repository;
+
+    @Autowired
+    private CouplesRepository repositoryCouples;
 
     @Autowired
     protected LocalContainerEntityManagerFactoryBean entityManagerFactory;
@@ -71,13 +75,14 @@ public class SystemCouplesServiceImpl implements SystemCouplesService {
 		return couplesMap;
 	}
 
-	public void deleteSystemCouple(String organizationId, Long coupleId) {
+	public void deleteSystemCouple(String organizationId, Integer coupleId) {
 		Map<Integer, List<Couples>> systemCouples = getAllSystemCouples(organizationId);
 		if (systemCouples != null && !systemCouples.isEmpty()) {
-			systemCouples.entrySet().stream().forEach(es -> {
-				es.getValue().stream().filter(f -> f.getId().equals(coupleId))
-						.forEach(couple -> repository.delete(new SystemCouples(es.getKey(), couple.getId())));
-			});
+			systemCouples.entrySet().stream()
+					.forEach(es -> es.getValue().stream().filter(f -> f.getId().equals(coupleId)).forEach(couple -> {
+						repository.delete(new SystemCouples(es.getKey(), couple.getId()));
+						repositoryCouples.delete(couple);
+					}));
 		}
 	}
 

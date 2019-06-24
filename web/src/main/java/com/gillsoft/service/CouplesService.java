@@ -15,4 +15,6 @@ public interface CouplesService {
 
 	public Couples save(Couples couple);
 
+	public void delete(Integer coupleId);
+	
 }

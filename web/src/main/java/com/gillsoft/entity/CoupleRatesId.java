@@ -8,7 +8,7 @@ public class CoupleRatesId implements Serializable {
 
 	private static final long serialVersionUID = 1555902152051060880L;
 
-	private Long coupleId;
+	private Integer coupleId;
 
 	private BigDecimal rate;
 
@@ -19,11 +19,11 @@ public class CoupleRatesId implements Serializable {
 	public CoupleRatesId() {
 	}
 
-	public Long getCoupleId() {
+	public Integer getCoupleId() {
 		return coupleId;
 	}
 
-	public void setCoupleId(Long coupleId) {
+	public void setCoupleId(Integer coupleId) {
 		this.coupleId = coupleId;
 	}
 

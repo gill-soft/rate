@@ -30,12 +30,12 @@ public class SystemCouples implements Serializable {
 	@Id
 	@Column(name="couple_id", nullable=false)
 	@JsonProperty("couple_id")
-	private Long coupleId;
+	private Integer coupleId;
 
 	public SystemCouples() {
 	}
 
-	public SystemCouples(Integer systemId, Long coupleId) {
+	public SystemCouples(Integer systemId, Integer coupleId) {
 		this.systemId = systemId;
 		this.coupleId = coupleId;
 	}
@@ -48,11 +48,11 @@ public class SystemCouples implements Serializable {
 		this.systemId = systemId;
 	}
 
-	public Long getCoupleId() {
+	public Integer getCoupleId() {
 		return this.coupleId;
 	}
 
-	public void setCoupleId(Long coupleId) {
+	public void setCoupleId(Integer coupleId) {
 		this.coupleId = coupleId;
 	}
 

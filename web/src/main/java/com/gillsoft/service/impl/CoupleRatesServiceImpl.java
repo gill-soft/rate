@@ -3,16 +3,19 @@ package com.gillsoft.service.impl;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.ParameterMode;
+import javax.persistence.TemporalType;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Parameter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -59,7 +62,7 @@ public class CoupleRatesServiceImpl implements CoupleRatesService {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<CoupleRates> getRateCouple(Long coupleId, Date date) {
+	public List<CoupleRates> getRateCouple(Integer coupleId, Date date) {
 		List<CoupleRates> coupleRates = null;
 		EntityManager em = entityManagerFactory.getObject().createEntityManager();
 		try {
@@ -85,15 +88,14 @@ public class CoupleRatesServiceImpl implements CoupleRatesService {
 			array = em
 					.createQuery(
 							"SELECT c, cr FROM Couples c, CoupleRates cr WHERE c.organizationId = :p_organization_id AND cr.coupleId = c.id AND (:p_date >= cr.dateStart and (:p_date <= cr.dateEnd or cr.dateEnd is null))")
-					.setParameter("p_organization_id", organizationId)
-					.setParameter("p_date", new Date())
+					.setParameter("p_organization_id", organizationId).setParameter("p_date", new Date())
 					.getResultList().toArray();
 			if (array.length != 0) {
 				map.put("couples", new ArrayList<>());
 				map.put("rates", new ArrayList<>());
 				for (int i = 0; i < array.length; i++) {
-					map.get("couples").add(((Object[])array[i])[0]);
-					map.get("rates").add(((Object[])array[i])[1]);
+					map.get("couples").add(((Object[]) array[i])[0]);
+					map.get("rates").add(((Object[]) array[i])[1]);
 				}
 			}
 		} catch (Exception e) {
@@ -104,16 +106,20 @@ public class CoupleRatesServiceImpl implements CoupleRatesService {
 		return map;
 	}
 
-	public void setRate(Long coupleId, BigDecimal rate, Date dateStart) throws Exception {
+	public void setRate(CoupleRates coupleRates) throws Exception {
 		EntityManager em = entityManagerFactory.getObject().createEntityManager();
 		try {
 			em.getTransaction().begin();
 			em.createStoredProcedureQuery("rate.mod_rate")
-					.registerStoredProcedureParameter("p_couple_id", Integer.class, ParameterMode.IN)
-					.registerStoredProcedureParameter("p_rate", BigDecimal.class, ParameterMode.IN)
-					.registerStoredProcedureParameter("p_date_start", Date.class, ParameterMode.IN)
-					.setParameter("p_couple_id", coupleId).setParameter("p_rate", rate)
-					.setParameter("p_date_start", dateStart).execute();
+			.registerStoredProcedureParameter("p_couple_id", Integer.class, ParameterMode.IN)
+			.registerStoredProcedureParameter("p_rate", BigDecimal.class, ParameterMode.IN)
+			.registerStoredProcedureParameter("p_date_start", Date.class, ParameterMode.IN)
+			.registerStoredProcedureParameter("p_date_end", Date.class, ParameterMode.IN)
+			.setParameter("p_couple_id", coupleRates.getCoupleId())
+			.setParameter("p_rate", coupleRates.getRate())
+			.setParameter("p_date_start", coupleRates.getDateStart())
+			.setParameter("p_date_end", coupleRates.getDateEnd() == null ? new GregorianCalendar(2099, GregorianCalendar.DECEMBER, 31, 23, 59, 59).getTime() : coupleRates.getDateEnd())
+			.execute();
 			em.getTransaction().commit();
 		} catch (Exception e) {
 			try {

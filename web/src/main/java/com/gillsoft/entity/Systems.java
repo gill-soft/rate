@@ -22,7 +22,7 @@ public class Systems implements Serializable {
 	private static final long serialVersionUID = -5261026356672271432L;
 
 	@Id
-	@Column(name="id", unique=true, nullable=false)
+	@Column(name="system_id", unique=true, nullable=false)
 	@GeneratedValue
 	@JsonProperty("id")
 	private Integer id;

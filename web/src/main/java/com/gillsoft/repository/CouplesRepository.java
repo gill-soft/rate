@@ -9,13 +9,16 @@ import org.springframework.stereotype.Repository;
 import com.gillsoft.entity.Couples;
 
 @Repository
-public interface CouplesRepository extends CrudRepository<Couples, String> {
+public interface CouplesRepository extends CrudRepository<Couples, Integer> {
 
 	@Override
 	@Query("select s from Couples s")
 	List<Couples> findAll();
 
 	@Override
-	Couples findOne(String systemId);
+	Couples findOne(Integer coupleId);
+
+	@Override
+	void delete(Couples couple);
 
 }
