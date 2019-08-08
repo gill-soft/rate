@@ -18,11 +18,25 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+
 @Configuration
 @EnableTransactionManagement
 @PropertySource("classpath:application.properties")
 @EnableJpaRepositories("com.gillsoft.repository")
 public class JPAConfig {
+	
+	private static final String SSH_USE = "ssh.use";
+	private static final String SSH_HOST = "ssh.host";
+	private static final String SSH_PORT = "ssh.port";
+	private static final String SSH_USER = "ssh.user";
+	private static final String SSH_PASSWORD = "ssh.password";
+	private static final String SSH_KEY = "ssh.private_key";
+	private static final String SSH_LOCAL_HOST = "ssh.local.host";
+	private static final String SSH_LOCAL_PORT = "ssh.local.port";
+	private static final String SSH_REMOTE_PORT = "ssh.remote.port";
 
 	@Autowired
 	private Environment env;
@@ -54,6 +68,9 @@ public class JPAConfig {
 
 	@Bean(name = "transactionManager")
 	public PlatformTransactionManager txManager() {
+		if (isUseSsh()) {
+			tunnel();
+		}
 		return new JpaTransactionManager(getEntityManagerFactoryBean().getObject());
 	}
 
@@ -65,4 +82,33 @@ public class JPAConfig {
 		properties.put("hibernate.id.new_generator_mappings", env.getProperty("hibernate.id.new_generator_mappings"));
 		return properties;
 	}
+	
+	private boolean isUseSsh() {
+		return Boolean.valueOf(env.getProperty(SSH_USE));
+	}
+	
+	private void tunnel() {
+		JSch jsch = new JSch();
+		try {
+			jsch.addIdentity(JPAConfig.class.getClassLoader().getResource(env.getProperty(SSH_KEY)).getPath(), getPassword());
+			Session session = jsch.getSession(env.getProperty(SSH_USER),
+					env.getProperty(SSH_HOST), Integer.valueOf(env.getProperty(SSH_PORT)));
+			session.setConfig("StrictHostKeyChecking", "no");
+			session.connect();
+			session.setPortForwardingL(Integer.valueOf(env.getProperty(SSH_LOCAL_PORT)),
+					env.getProperty(SSH_LOCAL_HOST), Integer.valueOf(env.getProperty(SSH_REMOTE_PORT)));
+		} catch (JSchException e) {
+		}
+	}
+	
+	private byte[] getPassword() {
+		String pass = env.getProperty(SSH_PASSWORD);
+		if (pass == null
+				|| pass.isEmpty()) {
+			return null;
+		} else {
+			return pass.getBytes();
+		}
+	}
+	
 }
