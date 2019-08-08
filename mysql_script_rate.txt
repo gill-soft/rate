@@ -1,0 +1,245 @@
+CREATE TABLE `rate`.`systems` (
+  `system_id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `plugin_name` VARCHAR(32) NOT NULL,
+  `description` VARCHAR(255) NULL,
+  `currency` VARCHAR(3) NOT NULL,
+  `run_hour` INT NOT NULL,
+  `days_shift` INT DEFAULT 0);
+ALTER TABLE systems ADD UNIQUE (plugin_name);
+#=============================================
+CREATE TABLE `rate`.`couples` (
+  `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `organization_id` VARCHAR(32),
+  `currency_from` VARCHAR(3) NOT NULL,
+  `currency_to` VARCHAR(3) NOT NULL);
+ALTER TABLE rate.couples ADD UNIQUE (organization_id, currency_from, currency_to);
+#=============================================
+CREATE TABLE `rate`.`couple_rates` (
+  `couple_id` INT NOT NULL,
+  `rate` DECIMAL(18,8) NOT NULL,
+  `date_start` DATETIME NOT NULL,
+  `date_end` DATETIME);
+ALTER TABLE rate.couple_rates ADD UNIQUE (couple_id, date_start);
+#=============================================
+CREATE TABLE `rate`.`system_couples` (
+  `system_id` INT NOT NULL,
+  `couple_id` INT NOT NULL,
+  PRIMARY KEY(system_id, couple_id),
+  FOREIGN KEY(couple_id) REFERENCES rate.couples(id) ON DELETE CASCADE,
+  FOREIGN KEY(system_id) REFERENCES rate.systems(system_id) ON DELETE CASCADE);
+#=============================================
+/*CREATE DEFINER=`root`@`localhost` PROCEDURE `mod_rate`(IN p_couple_id INT, IN p_rate DECIMAL(10,8), IN p_date_start DATETIME)
+BEGIN
+  declare l_row_count int;
+  declare l_same_rate_count int;
+  declare l_time datetime;
+  declare l_next_min_date_start datetime;
+
+  set l_time = coalesce(p_date_start, now());
+
+  select count(0) over(),
+		 coalesce(sum(case when cr.rate = p_rate then 1 else 0 end), 0)
+	into l_row_count,
+		 l_same_rate_count
+	from rate.couple_rates cr
+   where l_time between cr.date_start and coalesce(cr.date_end, l_time)
+     and cr.couple_id = p_couple_id;
+
+  if (l_same_rate_count = 0) then
+	if (l_row_count != 0) then
+      update rate.couple_rates cr
+		 set cr.date_end = DATE_ADD(p_date_start, INTERVAL -1 second)
+	   where l_time between cr.date_start and coalesce(cr.date_end, l_time);
+	end if;
+    select coalesce(min(DATE_ADD(date_start, INTERVAL -1 second)), STR_TO_DATE('2099-12-31 23:59:59','%Y-%m-%d %H:%i:%s'))
+      into l_next_min_date_start
+      from rate.couple_rates
+	 where couple_id = p_couple_id
+       and date_start > l_time;
+    insert
+      into rate.couple_rates (couple_id, rate, date_start, date_end)
+	values (p_couple_id, p_rate, l_time, l_next_min_date_start);
+  end if;
+
+END*/
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+CREATE DEFINER=`root`@`localhost` PROCEDURE `mod_rate`(IN p_couple_id INT, IN p_rate DECIMAL(18,8), IN p_date_start DATETIME, IN p_date_end DATETIME)
+BEGIN
+  declare l_date_start datetime;
+  declare l_date_end datetime;
+  declare l_prev_rate decimal(18,8);
+  declare l_prev_rate_date_start datetime;
+  declare l_prev_rate_date_end datetime;
+  declare l_next_rate decimal(18,8);
+  declare l_next_rate_date_start datetime;
+  declare l_next_rate_date_end datetime;
+  declare l_is_ins_new_rate tinyint;
+  declare l_is_check_next_rate tinyint;
+
+  set l_date_start = coalesce(p_date_start, now());
+  set l_date_end = coalesce(p_date_end, STR_TO_DATE('2099-12-31 23:59:59','%Y-%m-%d %H:%i:%s'));
+  set l_is_ins_new_rate = 0;
+  set l_is_check_next_rate = 1;
+
+  # delete all rates "inside" new rate (date_start+date_end between p_date_start and p_date_end)
+  delete
+    from rate.couple_rates
+   where date_start >= l_date_start
+     and date_end <= l_date_end
+     and rate != p_rate
+     and couple_id = p_couple_id;
+    # get previous rate - p_date_start betwen date_starts and date_end
+  select min(rate), min(date_start), min(date_end)
+    into l_prev_rate, l_prev_rate_date_start, l_prev_rate_date_end
+    from rate.couple_rates
+   where couple_id = p_couple_id
+     and p_date_start between date_start and date_end;
+	# check if the same previous rate "near" (before) the new one
+  if (l_prev_rate is null) then
+    select min(rate), min(date_start), min(date_end)
+      into l_prev_rate, l_prev_rate_date_start, l_prev_rate_date_end
+      from rate.couple_rates
+     where couple_id = p_couple_id
+       and DATE_ADD(p_date_start, INTERVAL -1 second) = date_end
+       and rate = p_rate;
+  end if;
+  # if no p_date_end - set the rate to the end (2099-12-31)
+  if (p_date_end is null) then
+    # delete all rates starting after date_start
+    delete
+      from rate.couple_rates
+     where couple_id = p_couple_id
+       and date_start >= p_date_start;
+	if (l_prev_rate is not null and l_prev_rate != p_rate) then
+	  # close all undeleted rates in period between p_date_start..p_date_end updating their date_end to p_date_start - 1 second
+	  update rate.couple_rates
+         set date_end = DATE_ADD(p_date_start, INTERVAL -1 second)
+	   where couple_id = p_couple_id
+         and p_date_start between date_start and date_end;
+	end if;
+	# insert new rate
+    if (l_prev_rate is null or (l_prev_rate is not null and l_prev_rate != p_rate)) then
+	  insert
+        into rate.couple_rates (couple_id, rate, date_start, date_end)
+	  values (p_couple_id, p_rate, p_date_start, l_date_end);
+    end if;
+  else
+	# get next rate - p_date_end betwen date_starts and date_end
+    select min(rate), min(date_start), min(date_end)
+      into l_next_rate, l_next_rate_date_start, l_next_rate_date_end
+      from rate.couple_rates
+	 where couple_id = p_couple_id
+       and p_date_end between date_start and date_end;
+	# check if the same next rate "near" (after) the new one
+	if (l_next_rate is null) then
+      select min(rate), min(date_start), min(date_end)
+        into l_next_rate, l_next_rate_date_start, l_next_rate_date_end
+        from rate.couple_rates
+	   where couple_id = p_couple_id
+         and DATE_ADD(p_date_end, INTERVAL 1 second) = date_start
+         and rate = p_rate;
+    end if;
+	# previous rate
+	if (l_prev_rate is not null) then
+      if (l_prev_rate = p_rate) then
+	    if (l_next_rate is not null) then
+          if (l_next_rate = p_rate and l_prev_rate_date_start != l_next_rate_date_start) then
+            # merge prev and next into one (l_prev_rate_date_start..l_next_rate_date_start)
+            update rate.couple_rates
+               set date_end = l_next_rate_date_end
+  		     where couple_id = p_couple_id
+               and rate = p_rate
+               and date_start = l_prev_rate_date_start;
+		    # delete next
+		    delete from rate.couple_rates
+		     where couple_id = p_couple_id
+               and rate = p_rate
+               and date_start = l_next_rate_date_start;
+		  else
+            set l_is_check_next_rate = 0;
+          end if;
+		else
+		  update rate.couple_rates
+			 set date_end = p_date_end
+		   where couple_id = p_couple_id
+			 and rate = p_rate
+			 and date_start = l_prev_rate_date_start;
+		  set l_is_check_next_rate = 0;
+        end if;
+      else
+        # close prev rate to p_date_start - 1 second
+        update rate.couple_rates
+		   set date_end = DATE_ADD(p_date_start, INTERVAL -1 second)
+		 where couple_id = p_couple_id
+		   and rate = l_prev_rate
+		   and date_start = l_prev_rate_date_start;
+		#set l_is_ins_new_rate = 1;
+      end if;
+	end if;
+	# next rate
+    if (l_is_check_next_rate != 0) then
+	  if (l_next_rate is not null) then
+        if (l_next_rate = p_rate) then
+          if (l_prev_rate is not null and l_next_rate = l_prev_rate and l_next_rate_date_end > p_date_end) then
+		    insert
+              into rate.couple_rates (couple_id, rate, date_start, date_end)
+	        values (p_couple_id, l_next_rate, DATE_ADD(p_date_end, INTERVAL 1 second), l_next_rate_date_end);
+          else
+            update rate.couple_rates
+		       set date_start = p_date_start
+		     where couple_id = p_couple_id
+		       and rate = p_rate
+		       and date_start = l_next_rate_date_start;
+		  end if;
+        else
+          # close next rate to start from p_date_end + 1 second
+          if (l_prev_rate is not null and l_next_rate = l_prev_rate and l_next_rate_date_end > p_date_end) then
+		    insert
+              into rate.couple_rates (couple_id, rate, date_start, date_end)
+	        values (p_couple_id, l_next_rate, DATE_ADD(p_date_end, INTERVAL 1 second), l_next_rate_date_end);
+          else
+          update rate.couple_rates
+		     set date_start = DATE_ADD(p_date_end, INTERVAL 1 second)
+		   where couple_id = p_couple_id
+		     and rate = l_next_rate
+		     and date_start = l_next_rate_date_start;
+		  end if;
+		  set l_is_ins_new_rate = 1;
+        end if;
+	  end if;
+    end if;
+  end if;
+  # add new rate p_date_start..p_date_end if no merge or update were done
+  if (l_is_ins_new_rate != 0) then
+	insert
+      into rate.couple_rates (couple_id, rate, date_start, date_end)
+	values (p_couple_id, p_rate, p_date_start, p_date_end);
+  end if;
+
+END
+#=============================================
+CREATE DEFINER=`root`@`localhost` PROCEDURE `mod_system_rate`(IN p_system_id INT, IN p_currency_from VARCHAR(3), IN p_currency_to VARCHAR(3), IN p_rate DECIMAL(10,8), IN p_date_start DATETIME)
+BEGIN
+  DECLARE l_couple_id INT DEFAULT 0;
+  DECLARE cur CURSOR FOR
+    SELECT c.id
+      FROM rate.couples c
+	  JOIN rate.system_couples sc
+        ON sc.couple_id = c.id
+	   AND sc.system_id = p_system_id
+     WHERE c.currency_from = p_currency_from
+       AND c.currency_to = p_currency_to;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET l_couple_id = null;
+
+  open cur;
+  REPEAT
+    fetch cur into l_couple_id;
+    if (l_couple_id is not null) then
+      call rate.mod_rate(l_couple_id, p_rate, p_date_start, null);
+    end if;
+  UNTIL l_couple_id is null
+  END REPEAT;
+  close cur;
+END
+#=============================================
+GRANT ALL PRIVILEGES ON *.* TO 'techsoftdb'@'localhost' WITH GRANT OPTION 
