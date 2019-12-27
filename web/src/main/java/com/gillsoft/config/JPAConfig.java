@@ -15,6 +15,7 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -87,7 +88,22 @@ public class JPAConfig {
 		return Boolean.valueOf(env.getProperty(SSH_USE));
 	}
 	
-	private void tunnel() {
+	private static Session session;
+	
+	@Scheduled(initialDelay = 15000, fixedDelay = 5000)
+	public void tunnel() {
+		if (isUseSsh()) {
+			if (session == null) {
+				session = newSession();
+			}
+			if (!session.isConnected()) {
+				session.disconnect();
+				session = newSession();
+			}
+		}
+	}
+	
+	private Session newSession() {
 		JSch jsch = new JSch();
 		try {
 			jsch.addIdentity(JPAConfig.class.getClassLoader().getResource(env.getProperty(SSH_KEY)).getPath(), getPassword());
@@ -97,8 +113,10 @@ public class JPAConfig {
 			session.connect();
 			session.setPortForwardingL(Integer.valueOf(env.getProperty(SSH_LOCAL_PORT)),
 					env.getProperty(SSH_LOCAL_HOST), Integer.valueOf(env.getProperty(SSH_REMOTE_PORT)));
+			return session;
 		} catch (JSchException e) {
 		}
+		return null;
 	}
 	
 	private byte[] getPassword() {
