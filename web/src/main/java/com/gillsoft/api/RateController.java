@@ -1,7 +1,8 @@
 package com.gillsoft.api;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -15,11 +16,14 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -174,19 +178,9 @@ public class RateController {
 	@GetMapping("/rate/{couple_id}/{date}")
 	@ApiOperation("Get rate for couple_id (currency_from/currency_to pair) for date")
 	public ResponseEntity<?> getRateForDate(@PathVariable("couple_id") Integer coupleId,
-			@PathVariable("date") String date) {
-		if (date == null || !date.replaceAll("\\d{4}-\\d{2}-\\d{2}", "").isEmpty()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new RequestError("Bad date format [yyyy-MM-dd]"));
-		}
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-		Date rateDate;
-		try {
-			rateDate = sdf.parse(date);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bad date format [yyyy-MM-dd]");
-		}
+			@Validated @PathVariable @DateTimeFormat(iso = ISO.DATE_TIME) LocalDateTime date) {
 		return new ResponseEntity<>(
-				coupleRatesService.getRateCouple(coupleId, rateDate), HttpStatus.OK);
+				coupleRatesService.getRateCouple(coupleId, Date.from(date.toInstant(ZoneOffset.UTC))), HttpStatus.OK);
 	}
 
 	@PostMapping("/rate")
